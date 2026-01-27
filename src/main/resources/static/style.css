@@ -1,0 +1,172 @@
+:root {
+    /* Основные цвета */
+    --color-primary: #3498db;
+    /* яркий голубой — основные кнопки, акценты */
+    --color-secondary: #1abc9c;
+    /* аквамарин — вторичные акценты */
+
+    /* Тона и оттенки */
+    --color-primary-light: #5dade2;
+    /* светлее основного — ховер-состояния */
+    --color-primary-dark: #2980b9;
+    /* темнее основного — активные состояния */
+
+    /* Фон и поверхности */
+    --color-background: #ecf0f1;
+    /* светлый синий подтон — основной фон */
+    --color-surface: #ffffff;
+    /* белый — карточки, блоки контента */
+    --color-border: #bdc3c7;
+    /* серый — границы, разделители */
+
+    /* Текст */
+    --color-text-dark: #2c3e50;
+    /* глубокий тёмно‑синий — основной текст */
+    --color-text-medium: #7f8c8d;
+    /* средний серый — вспомогательный текст */
+    --color-text-light: #95a5a6;
+    /* светлый серый — подсказки, placeholder */
+
+    /* Состояние ошибок/предупреждений */
+    --color-error: #e74c3c;
+    /* красный — ошибки */
+    --color-warning: #f39c12;
+    /* оранжевый — предупреждения */
+    --color-success: #27ae60;
+    /* зелёный — успех */
+
+    /* Нейтральные цвета */
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-gray: #95a5a6;
+}
+
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Roboto", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    background-color: var(--color-background);
+}
+
+.app {
+    margin: 0 auto;
+    max-width: 1280px;
+}
+
+.header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.header-text {
+    color: var(--color-text-medium);
+}
+
+button {
+    background-color: transparent;
+    color: var(--color-primary);
+}
+
+.header-btn {
+    padding: 10px;
+    border: 1px solid;
+    border-radius: 3px;
+}
+
+button:hover {
+    color: var(--color-primary-light);
+    cursor: pointer;
+}
+
+.main {
+    background-color: var(--color-surface);
+}
+
+.main-container {
+    display: flex;
+    gap: 20px;
+}
+
+.main-scenarios-header {
+    color: var(--color-text-dark);
+    font-size: 20px;
+    margin-bottom: 30px;
+}
+
+.main-scenario {
+    display: flex;
+    align-items: center;
+}
+
+.main-btn {
+    border: none;
+
+
+}
+
+.main-btn img {
+    width: 15px;
+    height: 15px;
+    border: none;
+}
+
+.scenarios-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--color-border);
+    padding-top: 20px;
+    padding-bottom: 10px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.calcBy-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.active {
+    background-color: #07dc19;
+}
+
+.supressed {
+    display: none;
+}
+
+.user-creds-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.user-creds {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px 20px;
+    background-color: #fff;
+}
+
+.user-creds>button {
+    align-self: flex-end;
+}
