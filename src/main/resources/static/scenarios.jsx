@@ -54,10 +54,10 @@ const ScenariosComponent = () => {
 
     return <div class="scenarios-container">
         <h4 class="main-scenarios-header">Список сценариев</h4>
+        <button class="main-scenario-new" onClick={HandleNewScenarioOnClick}>Новый сценарий</button>
         {scenarios.map(scenario =>
             <ScenarioComponent key={scenario.id} scenarioData={scenario} />
         )}
-        <button class="main-scenario-new" onClick={HandleNewScenarioOnClick}>Новый сценарий</button>
     </div>
 }
 
@@ -70,7 +70,10 @@ const ScenarioComponent = (props) => {
     const [markDelete, setMarkDelete] = React.useState(false)
 
     const HandleOnClickScenario = (e) => {
-        scenarioCtx.setActiveScenario($(e.target).parent('.main-scenario').data("scenarioId"))
+        if($(e.target).hasClass('scenario-name'))
+            scenarioCtx.setActiveScenario($(e.target).parent('.main-scenario').data("scenarioId"))
+        else
+            scenarioCtx.setActiveScenario($(e.target).data("scenarioId"))
         operationCtx.setActiveOperation(-1)
     }
 
@@ -138,11 +141,13 @@ const ScenarioComponent = (props) => {
         }
     }
 
-    return (!markDelete && <div
+    return (!markDelete && <div onClick={HandleOnClickScenario}
         className={`main-scenario ${scenarioCtx.activeScenario == scenarioData.id ? 'active' : ""}`}
         data-scenario-id={scenarioData.id}>
-        <p onClick={HandleOnClickScenario}>{scenarioData.name}</p>
-        <button className="main-btn" onClick={HandleEditScenarioOnClick}><img src="./ico/free-icon-edit-tools-9801073.png" alt="Редактировать" /></button>
-        <button className="main-btn" onClick={HandleDeleteScenarioOnClick}><img src="./ico/free-icon-garbage-10221510.png" alt="Удалить" /></button>
+        <p className="scenario-name" >{scenarioData.name}</p>
+        <div className="main-btn-container">
+            <button className="main-btn" title="Редактировать сценарий" onClick={HandleEditScenarioOnClick}><img src="./ico/free-icon-edit-tools-9801073.png" alt="Редактировать" /></button>
+            <button className="main-btn" title="Удалить сценарий" onClick={HandleDeleteScenarioOnClick}><img src="./ico/free-icon-garbage-10221510.png" alt="Удалить" /></button>
+        </div>
     </div>)
 }

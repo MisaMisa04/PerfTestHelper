@@ -52,11 +52,18 @@ body {
     font-weight: 400;
     font-style: normal;
     background-color: var(--color-background);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .app {
-    margin: 0 auto;
-    max-width: 1280px;
+    margin-left: 50px;
+    margin-right: 50px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .header {
@@ -72,14 +79,12 @@ body {
     color: var(--color-text-medium);
 }
 
-button {
+button,
+.submit-calc-operation-btn {
     background-color: transparent;
     color: var(--color-primary);
-}
-
-.header-btn {
-    padding: 10px;
     border: 1px solid;
+    padding: 10px;
     border-radius: 3px;
 }
 
@@ -88,30 +93,65 @@ button:hover {
     cursor: pointer;
 }
 
+.submit-calc-operation-btn:hover {
+    color: var(--color-success);
+    cursor: pointer;
+}
+
 .main {
-    background-color: var(--color-surface);
+    background-color: var(--color-background);
+    flex-grow: 1;
+    display: flex;
+    border: 1px solid var(--color-border);
+}
+
+.emptyBlock {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    color: var(--color-text-medium);
+    background-color: var(--color-background);
 }
 
 .main-container {
     display: flex;
-    gap: 20px;
+    background-color: var(--color-surface);
+    flex-grow: 1;
 }
 
-.main-scenarios-header {
+.main-scenarios-header,
+.main-operations-header,
+.operation-card-header,
+.operation-update-header {
     color: var(--color-text-dark);
     font-size: 20px;
-    margin-bottom: 30px;
 }
 
-.main-scenario {
+
+.main-scenario,
+.main-operation {
+    cursor: pointer;
+    padding: 5px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    color: var(--color-text-dark);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+}
+
+.operations-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--color-border);
+    padding: 5px;
 }
 
 .main-btn {
     border: none;
-
-
+    padding: 5px;
 }
 
 .main-btn img {
@@ -125,10 +165,32 @@ button:hover {
     flex-direction: column;
     gap: 10px;
     border: 1px solid var(--color-border);
-    padding-top: 20px;
-    padding-bottom: 10px;
-    padding-left: 3px;
-    padding-right: 3px;
+    padding: 5px;
+}
+
+.scenario-container {
+    display: flex;
+    flex-grow: 1;
+    border: 1px solid var(--color-border);
+}
+
+.operation-container {
+    border: 1px solid var(--color-border);
+    flex-grow: 1;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.scenario-name,
+.operation-name {
+    color: var(--color-text-dark);
+}
+
+.operation-info-table td {
+    border: 1px solid var(--color-gray);
+    padding: 5px;
 }
 
 .calcBy-container {
@@ -137,7 +199,7 @@ button:hover {
 }
 
 .active {
-    background-color: #07dc19;
+    background-color: var(--color-primary);
 }
 
 .supressed {
@@ -169,4 +231,79 @@ button:hover {
 
 .user-creds>button {
     align-self: flex-end;
+}
+
+.distributed-test-component {
+    display: flex;
+}
+
+.footer {
+  margin-top: auto;
+  background-color: var(--color-background);
+  padding: 2rem 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.footer-copyright {
+  color: var(--color-text-medium);
+  font-size: 0.9rem;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.footer-attributions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0 1rem;
+}
+
+.footer-link {
+  color: var(--color-text-light);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.3s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.footer-link:hover {
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.footer-link:active {
+  color: var(--color-primary-dark);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .footer-container {
+    padding: 0 1rem;
+  }
+  
+  .footer-attributions {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .footer-copyright {
+    text-align: left;
+  }
+}
+
+@media (min-width: 1200px) {
+  .footer-container {
+    padding: 0 2rem;
+  }
 }

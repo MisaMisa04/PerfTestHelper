@@ -56,12 +56,12 @@ const OperationsComponent = () => {
 
     if (scenarioCtx.activeScenario > 0)
         return (
-            <div class="main-operations">
+            <div class="operations-container">
                 <h4 class="main-operations-header">Список операций</h4>
+                <button class="main-operation-new" onClick={HandleNewOperationOnClick}>Новая операция</button>
                 {operations.map(operation =>
                     <OperationComponent key={operation.id} operationData={operation} />
                 )}
-                <button class="main-operation-new" onClick={HandleNewOperationOnClick}>Новая операция</button>
             </div>
         )
     else
@@ -143,10 +143,13 @@ const OperationComponent = (props) => {
 
     return (!markDelete &&
         <div class="main-operation"
+            onClick={HandleOnClickOperation}
             className={`main-operation ${operationCtx.activeOperation == operationData.id ? 'active' : ""}`}
             data-operation-id={operationData.id}>
-            <p onClick={HandleOnClickOperation}>{operationData.name}</p>
-            <button onClick={HandleEditOperationOnClick}>Редачить</button>
-            <button onClick={HandleDeleteOperationOnClick}>Удалить</button>
+            <p className="operation-name">{operationData.name}</p>
+            <div className="main-btn-container">
+                <button className="main-btn" title="Редактировать сценарий" onClick={HandleEditOperationOnClick}><img src="./ico/free-icon-edit-tools-9801073.png" alt="Редактировать" /></button>
+                <button className="main-btn" title="Удалить сценарий" onClick={HandleDeleteOperationOnClick}><img src="./ico/free-icon-garbage-10221510.png" alt="Удалить" /></button>
+            </div>
         </div>)
 }

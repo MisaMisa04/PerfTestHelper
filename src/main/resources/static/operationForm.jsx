@@ -54,7 +54,8 @@ const OperationInfoTableComponent = (props) => {
         props.setMode(MODE.edit)
     }
 
-    return ([<table class="operation-info-table">
+    return ([<h4 class="operation-card-header">Информация об операции</h4>, <button onClick={HandleEditPressed}>Редачить</button>,
+    <table class="operation-info-table">
         <tbody>
             <tr>
                 <td>RPS</td>
@@ -83,8 +84,7 @@ const OperationInfoTableComponent = (props) => {
                 <td>{props.operationData.gensAmount}</td>
             </tr>)}
         </tbody>
-        <caption>Информация об операции</caption>
-    </table>, <button onClick={HandleEditPressed}>Редачить</button>]
+    </table>]
     )
 }
 
@@ -149,18 +149,18 @@ const OperationUpdateComponent = (props) => {
             });
     }
 
-    return [<h5 class="operation-update-name">Обновление операции</h5>,
+    return [<h4 class="operation-update-header">Обновление операции</h4>,
     <div class="operation-update-param">
-        <label for="operation-rps-val">PRS</label>
+        <label for="operation-rps-val">RPS: </label>
         <input type="text" name="operation-rps-val" id="" value={props.operationData.rps} onChange={HandleRpsChanged} />
     </div>,
     <div class="operation-update-param">
-        <label for="operation-sla-val">SLA</label>
+        <label for="operation-sla-val">SLA: </label>
         <input type="text" name="operation-sla-val" id="" value={props.operationData.sla} onChange={HandleSLAChanged} />
     </div>,
     <CalcMethodOptionsComponent operationData={props.operationData} setOperationData={props.setOperationData} />,
     <DistributedTestComponent operationData={props.operationData} setOperationData={props.setOperationData} />,
-    <input type="submit" value="Расчитать" onClick={HandleFormSubmit} />,
+    <input type="submit" className="submit-calc-operation-btn" value="Рассчитать" onClick={HandleFormSubmit} />,
     <button onClick={HandleCancelEditOnClick}>Отменить редактирование</button>]
 }
 

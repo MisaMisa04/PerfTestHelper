@@ -7,7 +7,7 @@ const AppComponent = () => {
 
     React.useEffect(() => {
         console.log(userInfo)
-    }, [userInfo])
+    }, [])
 
     return <AppContext.Provider value={{
         scenarioCtx: { activeScenario, setActiveScenario },
@@ -18,19 +18,19 @@ const AppComponent = () => {
             <HeaderComponent />
         </header>
         <main className="main">
-            <div class="main-container">
-                <ScenariosComponent />
-                <div class="scenario-container">
-                    <OperationsComponent />
-                    <OperationFormComponent />
+            {userInfo.username ? (
+                <div className="main-container">
+                    <ScenariosComponent />
+                    <div className="scenario-container">
+                        <OperationsComponent />
+                        <OperationFormComponent />
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="emptyBlock"><p>Войдите или зарегистрируйтесь</p></div>
+            )}
         </main>
-        <footer className="footer"><p>Developed and produced by V.Koshkin. No rights reserved</p>
-            <a href="https://www.flaticon.com/ru/free-icons/-" title="пользовательский интерфейс иконки">Пользовательский интерфейс иконки от Irfansusanto20 - Flaticon</a>
-            <a href="https://www.flaticon.com/ru/free-icons/" title="удалить иконки">Удалить иконки от khulqi Rosyid - Flaticon</a>
-        </footer>
-
+        <FooterComponent />
     </AppContext.Provider>
 }
 
