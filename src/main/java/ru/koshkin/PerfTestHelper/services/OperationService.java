@@ -16,6 +16,8 @@ import ru.koshkin.PerfTestHelper.repositories.ScenarioRepo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static ru.koshkin.PerfTestHelper.services.ScenarioService.checkScenarioBelongsToUser;
@@ -34,6 +36,15 @@ public class OperationService {
 
     @Autowired
     private OperationDataMapper operationDataMapper;
+
+    //    default 50 threads, but expansible
+    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
+            50,                    // corePoolSize: 50 базовых потоков (всегда живут)
+            Integer.MAX_VALUE,   // maximumPoolSize: максимум потоков (практически неограниченно)
+            60L,                 // keepAliveTime: 60 сек для лишних потоков
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>() // очередь без буфера
+    );
 
 
     public static void checkOperationBelongsToUser(Operation operation, Long userId) throws Exception {
@@ -58,48 +69,57 @@ public class OperationService {
     }
 
     public OperationDataDTO calculateAndStoreOperation(OperationDataDTO operationDataDTO, Long userId) throws Exception {
-        Operation operation = operationRepo.findById(operationDataDTO.getOperationId()).orElseThrow();
-        checkOperationBelongsToUser(operation, userId);
         final CalcMethod calculateMethod = CalcMethod.fromOrdinal(operationDataDTO.getCalculateMethod());
         final Boolean isDistributed = Optional.ofNullable(operationDataDTO.getIsDistributed()).orElse(false);
         final int gensAmount = isDistributed ? operationDataDTO.getGensAmount() : 1;
         final Double sla = operationDataDTO.getSLA();
         final Integer rps = operationDataDTO.getRps();
-        Double ctt = operationDataDTO.getCTT();
-        Integer threadsAmount = operationDataDTO.getThreadsAmount();
-        switch (calculateMethod) {
-            case AUTO: {
-                double pacing = sla * 1.2; // условно + 20% запаса
-                ctt = (double) 60 / pacing;
-                // no break here: defining best CTT from SLA and calculating like CTT-based
-            }
-            case CTT: {
-                threadsAmount = (int) Math.floor((rps * 60) / (gensAmount * ctt));
-                // re-calculating CTT since threads wil be floored and won't be accurate
-                // as now we go to thread-based calc, so no break here as well
-            }
-            case THREADS: {
-                ctt = (double) (rps * 60) / (double) (gensAmount * threadsAmount);
-                // savin our entity (if exists)
-                try {
-                    operation.setCalculateMethod(calculateMethod);
-                    operation.setIsDistributed(isDistributed);
-                    operation.setGensAmount(gensAmount);
-                    operation.setSLA(sla);
-                    operation.setRps(rps);
-                    operation.setCTT(ctt);
-                    operation.setThreadsAmount(threadsAmount);
-                    operationRepo.save(operation);
-                } finally {
-                    // anyway filling our DTO with recalculated data
-                    operationDataDTO.setCTT(ctt);
-                    operationDataDTO.setThreadsAmount(threadsAmount);
+        AtomicReference<Double> ctt = new AtomicReference<>(operationDataDTO.getCTT());
+        AtomicReference<Integer> threadsAmount = new AtomicReference<>(operationDataDTO.getThreadsAmount());
+        Future<?> calculationFuture = executor.submit(() -> {
+            switch (calculateMethod) {
+                case AUTO: {
+                    double pacing = sla * 1.2; // условно + 20% запаса
+                    ctt.set((double) 60 / pacing);
+                    // no break here: defining best CTT from SLA and calculating like CTT-based
                 }
-                break;
+                case CTT: {
+                    threadsAmount.set((int) Math.floor((rps * 60) / (gensAmount * ctt.get())));
+                    // re-calculating CTT since threads wil be floored and won't be accurate
+                    // as now we go to thread-based calc, so no break here as well
+                }
+                case THREADS: {
+                    ctt.set((double) (rps * 60) / (double) (gensAmount * threadsAmount.get()));
+                    break;
+                }
+                default: {
+                    throw new UnsupportedOperationException("Get out of here U stupid hacker!");
+                }
             }
-            default: {
-                throw new UnsupportedOperationException("Poshel hanui!");
-            }
+        });
+        Operation operation = operationRepo.findById(operationDataDTO.getOperationId())
+                .orElseThrow();
+        checkOperationBelongsToUser(operation, userId);
+        try {
+            calculationFuture.get(); // Блокируется до завершения задачи
+            // savin our entity (if exists)
+            operation.setCalculateMethod(calculateMethod);
+            operation.setIsDistributed(isDistributed);
+            operation.setGensAmount(gensAmount);
+            operation.setSLA(sla);
+            operation.setRps(rps);
+            operation.setCTT(ctt.get());
+            operation.setThreadsAmount(threadsAmount.get());
+            operationRepo.save(operation);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Calculation interrupted", e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("Calculation failed", e.getCause());
+        } finally {
+            // anyway filling our DTO with recalculated data
+            operationDataDTO.setCTT(ctt.get());
+            operationDataDTO.setThreadsAmount(threadsAmount.get());
         }
         return operationDataDTO;
     }

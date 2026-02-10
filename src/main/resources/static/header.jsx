@@ -85,6 +85,9 @@ const UserCredsForm = (props) => {
                 console.log('Ответ сервера:', jqXHR.responseText)
                 console.log('Статус код:', jqXHR.status)
                 console.log('Заголовки:', jqXHR.getAllResponseHeaders())
+                if (jqXHR.status==403) {
+                    alert('Неправильно, попробуй ещё раз');
+                }
             });
     }
 
@@ -112,6 +115,10 @@ const UserCredsForm = (props) => {
             });
     }
 
+    const HandleVKIDClick = () => {
+        alert('Sowwy not wowking yet')
+    }
+
     return props.mode !== MODE.view && (<div className="user-creds-wrapper">
         <form class="user-creds" action={ACTION[props.mode]}>
             <button onClick={HandleCloseClick}>X</button>
@@ -119,7 +126,7 @@ const UserCredsForm = (props) => {
             <input type="password" name="password" id="password" placeholder="Enter Password" ref={passwordRef} />
             {props.mode === MODE.login && (<input type="submit" onClick={HandleLoginClick} value="Log In" />)}
             {props.mode === MODE.register && (<input type="submit" onClick={HandleRegisterClick} value="Register" />)}
-            <input type="button" value="Enter through VKID" />
+            <input type="button" value="Enter through VKID" onClick={HandleVKIDClick} />
         </form>
     </div >)
 
