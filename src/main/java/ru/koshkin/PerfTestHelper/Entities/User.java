@@ -8,8 +8,10 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Table
@@ -29,6 +31,9 @@ public class User implements UserDetails {
     @Column
     @NotBlank
     private String password;
+
+    @Column(name = "last_blocked_at")
+    private LocalDateTime lastBlockedAt;
 
     @OneToMany(mappedBy = "user")
     private List<Scenario> scenarios;

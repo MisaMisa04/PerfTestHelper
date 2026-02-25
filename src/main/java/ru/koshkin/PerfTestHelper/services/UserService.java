@@ -11,8 +11,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.koshkin.PerfTestHelper.DTO.UserDTO;
 import ru.koshkin.PerfTestHelper.Entities.User;
+import ru.koshkin.PerfTestHelper.Kafka.KafkaMessage;
+import ru.koshkin.PerfTestHelper.Kafka.KafkaSender;
+import ru.koshkin.PerfTestHelper.Kafka.KafkaTopic;
 import ru.koshkin.PerfTestHelper.repositories.UserRepo;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -21,9 +25,10 @@ public class UserService implements UserDetailsService {
     @Autowired
     private UserRepo userRepo;
 
-    //    @Autowired
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    ;
+
+    @Autowired
+    private KafkaSender kafkaSender;
 
     @Autowired
     private JwtService jwtService;
@@ -31,6 +36,10 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepo.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Username Not Found"));
+    }
+
+    public UserDetails loadUserByUserId(Long id) throws Exception {
+        return userRepo.findById(id).orElseThrow(() -> new Exception("User Not Found by ID"));
     }
 
     public String getJWTForUser(UserDTO userDTO) throws Exception {
@@ -46,10 +55,22 @@ public class UserService implements UserDetailsService {
             throw new Exception("User already exists");
         }
         User user = new User();
-        user.setUsername(userDTO.getUsername());
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        user = userRepo.save(user);
-        return jwtService.generateToken(user);
+        try {
+            user.setUsername(userDTO.getUsername());
+            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+            user = userRepo.save(user);
+            return jwtService.generateToken(user);
+        } finally {
+            sendRegistrationEventToKafka(user);
+        }
+    }
+
+    private void sendRegistrationEventToKafka(User user) {
+        KafkaMessage message = KafkaMessage.builder()
+                .topic(KafkaTopic.REGISTRATION_TOPIC)
+                .value(String.format("Wowee, we have new user registered: %s at %s", user.getUsername(), LocalDateTime.now()))
+                .build();
+        kafkaSender.sendMessage(message);
     }
 
     public String getUsernameById(Long id) {

@@ -1,1 +1,0 @@
-CREATE INDEX idx_jwt_expires_at ON jwt_tokens(expires_at);

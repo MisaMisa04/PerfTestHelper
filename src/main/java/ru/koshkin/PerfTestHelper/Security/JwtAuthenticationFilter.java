@@ -8,20 +8,26 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import ru.koshkin.PerfTestHelper.Entities.User;
+import ru.koshkin.PerfTestHelper.Exceptions.BlockedTokenException;
+import ru.koshkin.PerfTestHelper.Kafka.KafkaMessage;
+import ru.koshkin.PerfTestHelper.Kafka.KafkaSender;
+import ru.koshkin.PerfTestHelper.Kafka.KafkaTopic;
 import ru.koshkin.PerfTestHelper.enums.TokenStatus;
 import ru.koshkin.PerfTestHelper.services.JwtService;
 import ru.koshkin.PerfTestHelper.services.UserService;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +39,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String HEADER_NAME = "Authorization";
     private final JwtService jwtService;
     private final UserService userService;
+
+    @Autowired
+    public KafkaSender kafkaSender;
 
     @Override
     protected void doFilterInternal(
@@ -51,36 +60,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Обрезаем префикс и получаем имя пользователя из токена
         var jwt = authHeader.substring(BEARER_PREFIX.length());
         try {
-            var username = jwtService.extractUserName(jwt);// на этом моменте проверяется и валидность токена + время истечения
-            final TokenStatus tokenStatusFromDB = jwtService.getTokenStatusFromDB(username, jwt);
-            if (tokenStatusFromDB == TokenStatus.BLOCKED) {
-//                токен заблокирован - отправляем об этом ответ и не аутентифицируем
-                makeInvalidTokenErrorResponse(response, TokenStatus.BLOCKED);
-            } else if (tokenStatusFromDB == TokenStatus.ACTIVE && StringUtils.isNotEmpty(username) &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userService.loadUserByUsername(username);
+            var userId = jwtService.extractUserId(jwt);// на этом моменте проверяется и валидность токена + время истечения
+            // TODO переписать тут логику: доставать юзера из БД, смореть его last_blocked_at, сравнивать с issued_at токена
+            // TODO если last_blocked_at>issued_at, токен заблокирован
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                User user = (User) userService.loadUserByUserId(userId);
 
                 // Если токен валиден, то аутентифицируем пользователя
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (jwtService.isTokenValid(jwt, user) && !tokenIsBlocked(jwt, user)) {
                     SecurityContext context = SecurityContextHolder.createEmptyContext();
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
+                            user,
                             null,
-                            userDetails.getAuthorities()
+                            user.getAuthorities()
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     context.setAuthentication(authToken);
                     SecurityContextHolder.setContext(context);
+                    sendAuthEventToKafka(user); // TODO а что если кафка будет недоступна??
                 }
             }
         } catch (ExpiredJwtException expired) {
-//            токен истёк - ставим ему истекание в базе, добавляем инфу в ответ
-            jwtService.markJwtExpired(jwt);
             makeInvalidTokenErrorResponse(response, TokenStatus.EXPIRED);
+        } catch (BlockedTokenException blocked) {
+            makeInvalidTokenErrorResponse(response, TokenStatus.BLOCKED);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         } finally {
             filterChain.doFilter(request, response);
         }
+    }
+
+    private void sendAuthEventToKafka(User user) {
+        KafkaMessage message = KafkaMessage.builder()
+                .topic(KafkaTopic.AUTHENTIFICATION_TOPIC)
+                .value(String.format("User %s authenticated at %s", user.getUsername(), LocalDateTime.now()))
+                .build();
+        kafkaSender.sendMessage(message);
+    }
+
+    private boolean tokenIsBlocked(String jwt, User user) {
+        if (user.getLastBlockedAt() == null) return false;
+        return jwtService.extractIssuedAt(jwt).isBefore(user.getLastBlockedAt());
     }
 
     private void makeInvalidTokenErrorResponse(HttpServletResponse response, TokenStatus tokenStatus) {

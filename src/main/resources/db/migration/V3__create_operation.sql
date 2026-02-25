@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS `operation` (
   PRIMARY KEY (`id`),
   KEY `FKfnb1l0rhtnrii8uxh4c5wioyt` (`scenario_id`),
   CONSTRAINT `FKfnb1l0rhtnrii8uxh4c5wioyt` FOREIGN KEY (`scenario_id`) REFERENCES `scenario` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci
+)
