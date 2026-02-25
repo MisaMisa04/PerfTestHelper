@@ -27,6 +27,7 @@ import ru.koshkin.PerfTestHelper.services.UserService;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.http.HttpRequest;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,8 +62,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         var jwt = authHeader.substring(BEARER_PREFIX.length());
         try {
             var userId = jwtService.extractUserId(jwt);// на этом моменте проверяется и валидность токена + время истечения
-            // TODO переписать тут логику: доставать юзера из БД, смореть его last_blocked_at, сравнивать с issued_at токена
-            // TODO если last_blocked_at>issued_at, токен заблокирован
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 User user = (User) userService.loadUserByUserId(userId);
 
@@ -78,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     context.setAuthentication(authToken);
                     SecurityContextHolder.setContext(context);
-                    sendAuthEventToKafka(user); // TODO а что если кафка будет недоступна??
+                    sendAuthEventToKafka(user, request);
                 }
             }
         } catch (ExpiredJwtException expired) {
@@ -92,17 +91,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void sendAuthEventToKafka(User user) {
+    private void sendAuthEventToKafka(User user, HttpServletRequest request) {
         KafkaMessage message = KafkaMessage.builder()
                 .topic(KafkaTopic.AUTHENTIFICATION_TOPIC)
-                .value(String.format("User %s authenticated at %s", user.getUsername(), LocalDateTime.now()))
+                .value(String.format("User %s authenticated during the request of %s",
+                        user.getUsername(),
+                        request.getMethod() + ' ' + request.getRequestURI())
+                )
                 .build();
         kafkaSender.sendMessage(message);
     }
 
-    private boolean tokenIsBlocked(String jwt, User user) {
+    private boolean tokenIsBlocked(String jwt, User user) throws BlockedTokenException {
         if (user.getLastBlockedAt() == null) return false;
-        return jwtService.extractIssuedAt(jwt).isBefore(user.getLastBlockedAt());
+        if (jwtService.extractIssuedAt(jwt).isBefore(user.getLastBlockedAt()))
+            throw new BlockedTokenException();
+        else return false;
     }
 
     private void makeInvalidTokenErrorResponse(HttpServletResponse response, TokenStatus tokenStatus) {

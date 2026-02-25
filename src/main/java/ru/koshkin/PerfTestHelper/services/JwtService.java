@@ -11,10 +11,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ru.koshkin.PerfTestHelper.Entities.User;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +40,7 @@ public class JwtService {
 
     public LocalDateTime extractIssuedAt(String token) {
         final Claims claims = extractAllClaims(token);
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(claims.get("iat", Long.class)), ZoneId.systemDefault());
+        return LocalDateTime.ofEpochSecond(claims.get("iat", Long.class),0, ZoneOffset.ofHours(3));
     }
 
     /**
@@ -100,11 +102,19 @@ public class JwtService {
      * @return токен
      */
     private String generateToken(Map<String, Object> extraClaims, User user) {
-        String token = Jwts.builder().setClaims(extraClaims).setSubject(user.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * Long.parseLong(tokenExpirationSeconds)))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
-        return token;
+        // Расчёт времени истечения токена
+        long expirationSeconds = Long.parseLong(tokenExpirationSeconds);
+        Instant now = Instant.now();
+        Instant expirationInstant = now.plusSeconds(expirationSeconds);
+        return Jwts.builder()
+                .claims()
+                .add(extraClaims)
+                .subject(user.getUsername())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expirationInstant))
+                .and()
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     /**
