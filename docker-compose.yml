@@ -1,4 +1,20 @@
 services:
+  app:
+    image: perftesthelperapp
+    build: .
+    container_name: PerfTestHelperApp
+    ports:
+      - "8080:8080"
+    depends_on:
+      - MariaDB
+      - kafka
+    environment:
+      db.url: jdbc:mariadb://MariaDB:3306/perftesthelperdb
+      db.user: PerfTestHelperUser
+      db.pass: 123
+      kafka.url: kafka:9092
+      kafka.self-consumer: false
+
   kafka:
     image: confluentinc/cp-kafka:latest
     hostname: kafka
@@ -6,14 +22,15 @@ services:
     ports:
       - "9092:9092"
       - "9093:9093"
+      - "9094:9094"  # for offset explorer
     environment:
       KAFKA_KRAFT_MODE: "true"
       KAFKA_PROCESS_ROLES: "broker,controller"
       KAFKA_NODE_ID: "1"
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
-      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
       KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
@@ -21,7 +38,7 @@ services:
       CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Qk"
       KAFKA_LOG_DIRS: "/var/lib/kafka/data"
     volumes:
-      - kafka-data:/var/lib/kafka/data  # Явное монтирование
+      - kafka-data:/var/lib/kafka/data
 
   MariaDB:
     image: mariadb:latest
