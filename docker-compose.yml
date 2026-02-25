@@ -22,7 +22,7 @@ services:
     ports:
       - "9092:9092"
       - "9093:9093"
-      - "9094:9094"  # for offset explorer
+      - "9094:9094"  # for offset explorer and dev needs
     environment:
       KAFKA_KRAFT_MODE: "true"
       KAFKA_PROCESS_ROLES: "broker,controller"
