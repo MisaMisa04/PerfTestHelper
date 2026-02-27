@@ -17,7 +17,11 @@ const FooterComponent = () => {
                     class="footer-link">
                     Удалить иконки от khulqi Rosyid - Flaticon
                 </a>
-                <a href="https://www.flaticon.com/free-icons/json-file" title="json file icons">Json file icons created by Assetwave - Flaticon</a>
+                <a href="https://www.flaticon.com/free-icons/json-file"
+                    title="json file icons"
+                    class="footer-link">
+                    Json file icons created by Assetwave - Flaticon
+                </a>
             </div>
         </div>
     </footer>
