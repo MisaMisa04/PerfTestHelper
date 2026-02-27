@@ -1,6 +1,10 @@
 package ru.koshkin.PerfTestHelper.controllers;
 
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +44,24 @@ public class ScenarioController {
     public SuccessDto deleteScenario(@RequestParam("scenarioId") Long scenarioId) {
         Long userId = ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
         return scenarioService.deleteScenarion(scenarioId, userId);
+
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path = "scenario_json")
+    public ResponseEntity<String> formJSONOfScenario(@RequestParam("scenarioId") Long scenarioId) {
+        Long userId = ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+        try {
+            String bodyJSON = scenarioService.formJSONOfScenario(scenarioId, userId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setContentDispositionFormData("attachment", "scenario-" + scenarioId + ".json");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(bodyJSON);
+        } catch (Exception e) {
+            var err = new SuccessDto(false, e.getLocalizedMessage());
+            return ResponseEntity.badRequest().body(new Gson().toJson(err));
+        }
 
     }
 }

@@ -108,6 +108,7 @@ const OperationComponent = (props) => {
                     console.log('Ответ сервера:', jqXHR.responseText)
                     console.log('Статус код:', jqXHR.status)
                     console.log('Заголовки:', jqXHR.getAllResponseHeaders())
+                    alert(JSON.parse(jqXHR.responseText))
                 });
         }
     }
@@ -136,6 +137,7 @@ const OperationComponent = (props) => {
                     console.log('Ответ сервера:', jqXHR.responseText)
                     console.log('Статус код:', jqXHR.status)
                     console.log('Заголовки:', jqXHR.getAllResponseHeaders())
+                    alert(JSON.parse(jqXHR.responseText))
                 });
 
         }

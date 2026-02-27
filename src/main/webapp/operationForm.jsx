@@ -30,6 +30,7 @@ const OperationFormComponent = () => {
                     console.log('Ответ сервера:', jqXHR.responseText)
                     console.log('Статус код:', jqXHR.status)
                     console.log('Заголовки:', jqXHR.getAllResponseHeaders())
+                    alert(JSON.parse(jqXHR.responseText))
                 });
         }
     }, [scenarioCtx.activeScenario, operationCtx.activeOperation])

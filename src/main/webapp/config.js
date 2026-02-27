@@ -14,5 +14,6 @@ const REQUESTS = {
     deleteScenario: "/api/v1/scenario",
     login: "/api/v1/login",
     register: "/api/v1/register",
-    getUsername: "/api/v1/getUsername"
+    getUsername: "/api/v1/getUsername",
+    getScenarioJSON: "/api/v1/scenario_json"
 }
