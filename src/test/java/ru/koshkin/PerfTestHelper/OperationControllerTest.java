@@ -39,8 +39,8 @@ public class OperationControllerTest {
     @Test
     @WithMockSecurityContext
     public void getOperations_ReturnsList_WhenScenarioIdProvided() throws Exception {
-        Long scenarioId = 1L;
-        String operationName = "Operation Sample";
+        final Long scenarioId = 1L;
+        final String operationName = "Operation Sample";
         List<OperationDTO> expected = List.of(new OperationDTO(scenarioId, operationName));
 
         when(operationService.getScenarioOperations(anyLong(), anyLong())).thenReturn(expected);
@@ -51,7 +51,7 @@ public class OperationControllerTest {
                 .andExpect(status().isOk()) // ожидаем HTTP 200 OK
                 .andExpect(content().contentType("application/json")) // Content-Type: application/json
                 .andExpect(jsonPath("$.length()").value(1)) // в ответе 1 элемент
-                .andExpect(jsonPath("$[0].id").value(1)) // у элемента id=1
+                .andExpect(jsonPath("$[0].id").value(scenarioId)) // у элемента id=1
                 .andExpect(jsonPath("$[0].name").value(operationName));
     }
 
