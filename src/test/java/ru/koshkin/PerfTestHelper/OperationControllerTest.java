@@ -13,6 +13,7 @@ import ru.koshkin.PerfTestHelper.DTO.OperationDataDTO;
 import ru.koshkin.PerfTestHelper.MockSecurityContext.WithMockSecurityContext;
 import ru.koshkin.PerfTestHelper.Security.JwtAuthenticationFilter;
 import ru.koshkin.PerfTestHelper.controllers.OperationController;
+import ru.koshkin.PerfTestHelper.enums.CalcMethod;
 import ru.koshkin.PerfTestHelper.services.OperationService;
 
 import java.util.List;
@@ -60,9 +61,17 @@ public class OperationControllerTest {
     public void getOperationData_returnOperationDataDTO_WhenScenarioIdAndOperationIdProvided() throws Exception {
         final Long scenarioId = 1L;
         final Long operationId = 3L;
+        final String operationName="Test Operation";
         final OperationDataDTO expected = new OperationDataDTO();
         expected.setScenarioId(scenarioId);
         expected.setOperationId(operationId);
+        expected.setCTT(60d);
+        expected.setThreadsAmount(1);
+        expected.setRps(60);
+        expected.setCalculateMethod(0);
+        expected.setIsDistributed(false);
+        expected.setSLA(0.9);
+        expected.setOperationName(operationName);
         when(operationService.getOperationData(anyLong(), anyLong(), anyLong())).thenReturn(expected);
 
         mockMvc.perform(
@@ -73,6 +82,13 @@ public class OperationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$.scenarioId").value(scenarioId))
-                .andExpect(jsonPath("$.operationId").value(operationId));
+                .andExpect(jsonPath("$.operationId").value(operationId))
+                .andExpect(jsonPath("$.operationName").value(operationName))
+                .andExpect(jsonPath("$.ctt").value(60))
+                .andExpect(jsonPath("$.threadsAmount").value(1))
+                .andExpect(jsonPath("$.rps").value(60))
+                .andExpect(jsonPath("$.calculateMethod").value(0))
+                .andExpect(jsonPath("$.isDistributed").value(false))
+                .andExpect(jsonPath("$.sla").value(0.9));
     }
 }
